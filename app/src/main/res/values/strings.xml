@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">andoridProject</string>
+    <string name="login">Login</string>
+    <string name="username">username</string>
+</resources>

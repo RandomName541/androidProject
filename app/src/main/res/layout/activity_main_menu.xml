@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F5F5"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trading Simulator"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="#212121"
+        android:layout_marginTop="40dp"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Master the Markets"
+        android:textSize="16sp"
+        android:textColor="#757575"
+        android:layout_marginBottom="60dp"/>
+
+    <Button
+        android:id="@+id/btnMarket"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:text="Enter Market"
+        android:textSize="18sp"
+        android:backgroundTint="#2196F3"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"
+        app:cornerRadius="16dp"
+        app:icon="@android:drawable/ic_menu_search"/>
+
+    <Button
+        android:id="@+id/btnPortfolio"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:text="My Portfolio"
+        android:textSize="18sp"
+        android:backgroundTint="#4CAF50"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"
+        app:cornerRadius="16dp"
+        app:icon="@android:drawable/ic_menu_my_calendar"/>
+<Button
+        android:id="@+id/btnHistory"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:text="Trade History"
+        android:textSize="18sp"
+        android:backgroundTint="#9C27B0"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"
+        app:cornerRadius="16dp"
+        app:icon="@android:drawable/ic_menu_recent_history"/>
+    <Button
+        android:id="@+id/btnLeaderboard"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:text="Leaderboard"
+        android:textSize="18sp"
+        android:backgroundTint="#FFC107"
+        android:textColor="#212121"
+        android:layout_marginBottom="16dp"
+        app:cornerRadius="16dp"
+        app:icon="@android:drawable/btn_star_big_on"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:id="@+id/tvQuickBalance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Balance: $10,000.00"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#4CAF50"
+        android:layout_marginBottom="20dp"/>
+
+</LinearLayout>

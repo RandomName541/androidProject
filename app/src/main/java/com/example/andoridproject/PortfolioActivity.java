@@ -8,13 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.*;
-import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,9 +26,7 @@ public class PortfolioActivity extends AppCompatActivity implements PositionAdap
     
     private DatabaseReference userRef;
     private ValueEventListener portfolioListener;
-    private RequestQueue requestQueue;
-    
-    private final String FINNHUB_TOKEN = "d5fo7qhr01qnjhodiehgd5fo7qhr01qnjhodiei0";
+    private StockApiClient stockApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +40,7 @@ public class PortfolioActivity extends AppCompatActivity implements PositionAdap
         adapter = new PositionAdapter(positionList, this);
         recyclerView.setAdapter(adapter);
         
-        requestQueue = Volley.newRequestQueue(this);
+        stockApiClient = new StockApiClient(this);
 
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         userRef = FirebaseDatabase.getInstance().getReference("users").child(uid);
@@ -87,36 +80,29 @@ public class PortfolioActivity extends AppCompatActivity implements PositionAdap
     }
 
     private void fetchLivePriceForPosition(Position p, String key) {
-        String url = "https://finnhub.io/api/v1/quote?symbol=" + p.symbol + "&token=" + FINNHUB_TOKEN;
-        StringRequest request = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    try {
-                        JSONObject json = new JSONObject(response);
-                        float livePrice = (float) json.getDouble("c");
-                        
-                        // Recalculate P/L with actual live data
-                        p.calculatePL(livePrice);
-                        adapter.notifyDataSetChanged(); // Update UI with colored P/L text
+        stockApiClient.fetchQuote(p.symbol,
+                livePrice -> {
+                    // Recalculate P/L with actual live data
+                    p.calculatePL(livePrice);
+                    adapter.notifyDataSetChanged(); // Update UI with colored P/L text
 
-                        // FEATURE: Check Stop-Loss and Take-Profit
-                        boolean shouldClose = false;
+                    // FEATURE: Check Stop-Loss and Take-Profit
+                    boolean shouldClose = false;
 
-                        if ("BUY".equals(p.type)) {
-                            if (p.stopLoss > 0 && livePrice <= p.stopLoss) shouldClose = true;
-                            if (p.takeProfit > 0 && livePrice >= p.takeProfit) shouldClose = true;
-                        } else { // SHORT (Logic is reversed: higher price is bad)
-                            if (p.stopLoss > 0 && livePrice >= p.stopLoss) shouldClose = true;
-                            if (p.takeProfit > 0 && livePrice <= p.takeProfit) shouldClose = true;
-                        }
+                    if ("BUY".equals(p.type)) {
+                        if (p.stopLoss > 0 && livePrice <= p.stopLoss) shouldClose = true;
+                        if (p.takeProfit > 0 && livePrice >= p.takeProfit) shouldClose = true;
+                    } else { // SHORT (Logic is reversed: higher price is bad)
+                        if (p.stopLoss > 0 && livePrice >= p.stopLoss) shouldClose = true;
+                        if (p.takeProfit > 0 && livePrice <= p.takeProfit) shouldClose = true;
+                    }
 
-                        if (shouldClose) {
-                            Toast.makeText(this, "Auto-closing " + p.symbol + " (Limit Hit!)", Toast.LENGTH_LONG).show();
-                            executeTradeClose(p, key);
-                        }
-                        
-                    } catch (Exception e) { /* Ignore parsing errors */ }
-                }, null);
-        requestQueue.add(request);
+                    if (shouldClose) {
+                        Toast.makeText(this, "Auto-closing " + p.symbol + " (Limit Hit!)", Toast.LENGTH_LONG).show();
+                        executeTradeClose(p, key);
+                    }
+                },
+                error -> Log.e("API", "Error: " + error.getMessage()));
     }
 
     @Override

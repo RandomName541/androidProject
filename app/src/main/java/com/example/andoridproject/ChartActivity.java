@@ -9,14 +9,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import com.android.volley.Request;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.*;
-import org.json.JSONObject;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class ChartActivity extends AppCompatActivity {
@@ -27,9 +21,9 @@ public class ChartActivity extends AppCompatActivity {
     private float userBalance = 0f;
     private TextView tvTitle;
     private DatabaseReference userRef;
+    private StockApiClient stockApiClient;
     
     private ValueEventListener balanceListener; // Memory leak fix
-    private final String FCS_API_KEY = "sAg1PMIDFvzXBPCiJGOTMS5Atoq5mP";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +34,7 @@ public class ChartActivity extends AppCompatActivity {
         tvTitle = findViewById(R.id.tvChartTitle);
         tvTitle.setText(symbol + " Chart");
         myCustomChart = findViewById(R.id.myCustomChart);
+        stockApiClient = new StockApiClient(this);
 
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         userRef = FirebaseDatabase.getInstance().getReference("users").child(uid);
@@ -129,42 +124,17 @@ public class ChartActivity extends AppCompatActivity {
     }
 
     private void fetchChartData() {
-        String url = "https://fcsapi.com/api-v3/stock/history?symbol=" + symbol + "&period=1d&access_key=" + FCS_API_KEY;
-        StringRequest request = new StringRequest(Request.Method.GET, url,
-                response -> {
-                    try {
-                        JSONObject jsonObject = new JSONObject(response);
-                        if (jsonObject.getBoolean("status")) {
-                            // FIX: FCS returns a JSON Array, not a JSON Object
-                            org.json.JSONArray dataArray = jsonObject.getJSONArray("response");
-                            List<CandleData> list = new ArrayList<>();
-
-                            for (int i = 0; i < dataArray.length(); i++) {
-                                JSONObject d = dataArray.getJSONObject(i);
-                                currentPrice = (float) d.getDouble("c"); // Updates to the latest price
-
-                                // Format the date (FCS returns "YYYY-MM-DD HH:MM:SS" in the "tm" field)
-                                String fullDate = d.optString("tm", "");
-                                String dateLabel = fullDate.length() >= 10 ? fullDate.substring(5, 10) : "";
-
-                                list.add(new CandleData(
-                                        (float) d.getDouble("o"),
-                                        (float) d.getDouble("c"),
-                                        (float) d.getDouble("h"),
-                                        (float) d.getDouble("l"),
-                                        dateLabel
-                                ));
-                            }
-                            myCustomChart.setData(list);
-                        } else {
-                            // If API limit is reached or key is wrong, show a message
-                            Toast.makeText(this, jsonObject.getString("msg"), Toast.LENGTH_LONG).show();
-                        }
-                    } catch (Exception e) {
-                        Log.e("ChartError", "Parsing Error: " + e.getMessage());
+        stockApiClient.fetchHistory(symbol,
+                list -> {
+                    if (!list.isEmpty()) {
+                        currentPrice = list.get(list.size() - 1).close;
                     }
-                }, error -> Log.e("ChartError", "Volley Error: " + error.toString()));
-        Volley.newRequestQueue(this).add(request);
+                    myCustomChart.setData(list);
+                },
+                error -> {
+                    Log.e("ChartError", "Functions Error: " + error.getMessage());
+                    Toast.makeText(this, "Unable to load chart data", Toast.LENGTH_LONG).show();
+                });
     }
 
     @Override

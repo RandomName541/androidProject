@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+app/google-services.json
+functions/
+.firebase-tools/
+.firebase-config/
+.npm-cache/
+push-needed-files.log
